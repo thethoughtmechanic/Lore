@@ -46,9 +46,9 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-8 py-6">
+          <div className="bg-gradient-to-r from-black to-gray-900 px-8 py-6">
             <h1 className="text-3xl font-bold text-white">My Tasks</h1>
-            <p className="text-blue-100 mt-1">
+            <p className="text-gray-300 mt-1">
               {activeTodos} {activeTodos === 1 ? 'task' : 'tasks'} remaining
             </p>
           </div>
