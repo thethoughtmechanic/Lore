@@ -1,118 +1,143 @@
+import { Bookmark, BookmarkCheck } from 'lucide-react'
 import { FlatSlide } from '../types'
 
-const TYPE_LABELS: Record<string, string> = {
-  hook: 'HOOK',
-  context: 'CONTEXT',
-  move: 'THE MOVE',
-  outcome: 'OUTCOME',
-  insight: 'INSIGHT',
+const TYPE_META: Record<string, { label: string; prefix?: string }> = {
+  hook:    { label: 'HOOK' },
+  context: { label: 'CONTEXT' },
+  move:    { label: 'THE MOVE', prefix: '▶' },
+  outcome: { label: 'OUTCOME' },
+  insight: { label: 'KEY INSIGHT', prefix: '✦' },
 }
 
 interface Props {
   flatSlide: FlatSlide
   totalStories: number
+  isSaved: boolean
+  onSave: () => void
 }
 
-export function SlideCard({ flatSlide, totalStories }: Props) {
+export function SlideCard({ flatSlide, totalStories, isSaved, onSave }: Props) {
   const { story, slide, slideIndex, totalSlides, isFirstSlide, storyNumber } = flatSlide
-  const color = story.color
+  const { color } = story
+  const meta = TYPE_META[slide.type]
+  const isHook = slide.type === 'hook'
+  const isInsight = slide.type === 'insight'
+  const isMove = slide.type === 'move'
+  const isOutcome = slide.type === 'outcome'
+
+  const colorBg = `${color}18`
+  const colorBorder = `${color}35`
+  const colorDim = `${color}99`
 
   return (
     <div
-      className="slide flex flex-col h-full px-5 pt-4 pb-6 select-none"
-      style={{ '--accent': color } as React.CSSProperties}
+      className="sc-root"
+      style={{ '--c': color, '--cb': colorBg, '--cd': colorDim } as React.CSSProperties}
     >
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="text-[11px] font-bold tracking-widest px-2 py-0.5 rounded"
-            style={{ color, border: `1px solid ${color}33`, background: `${color}15` }}
-          >
-            {story.company.toUpperCase()}
-          </span>
-          {isFirstSlide && (
-            <span className="text-[11px] text-white/30 font-medium">
-              {storyNumber} / {totalStories}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          {Array.from({ length: totalSlides }).map((_, i) => (
-            <div
-              key={i}
-              className="h-1.5 rounded-full transition-all duration-300"
-              style={{
-                width: i === slideIndex ? '20px' : '6px',
-                background: i === slideIndex ? color : 'rgba(255,255,255,0.18)',
-              }}
-            />
-          ))}
-        </div>
+      {/* Subtle hook gradient wash */}
+      {isHook && (
+        <div
+          className="sc-hook-wash"
+          style={{ background: `linear-gradient(160deg, ${colorBg} 0%, transparent 50%)` }}
+        />
+      )}
+
+      {/* ── Top bar ── */}
+      <div className="sc-top">
+        <span className="sc-badge" style={{ color, background: colorBg, borderColor: colorBorder }}>
+          {story.company.toUpperCase()}
+        </span>
+        <span className="sc-story-num">{storyNumber} / {totalStories}</span>
       </div>
 
-      {/* Type label */}
-      <div
-        className="text-[10px] font-bold tracking-[0.2em] mb-3 flex-shrink-0"
-        style={{ color: `${color}cc` }}
-      >
-        {TYPE_LABELS[slide.type]}
+      {/* ── Type label ── */}
+      <div className="sc-type" style={{ color: colorDim }}>
+        {meta.prefix && <span className="sc-type-prefix">{meta.prefix}</span>}
+        {meta.label}
+        {isMove && <div className="sc-move-rule" style={{ background: colorBorder }} />}
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col justify-center min-h-0">
+      {/* ── Main content ── */}
+      <div className={`sc-content ${isHook ? 'sc-content--hook' : ''}`}>
+
+        {/* Context: decorative slide number */}
+        {slide.type === 'context' && (
+          <div className="sc-bg-num" style={{ color: `${color}08` }}>
+            {String(slideIndex + 1).padStart(2, '0')}
+          </div>
+        )}
+
         {/* Headline */}
-        <h2 className="text-[1.45rem] font-bold leading-[1.25] text-white mb-5">
-          {slide.headline}
-        </h2>
-
-        {/* Stat callout */}
-        {slide.stat && (
+        {isInsight ? (
           <div
-            className="mb-5 pl-4 border-l-2"
-            style={{ borderColor: color }}
+            className="sc-insight-box"
+            style={{ background: colorBg, borderColor: colorBorder, borderLeftColor: color }}
           >
-            <div
-              className="text-3xl font-black leading-none mb-1"
-              style={{ color }}
-            >
-              {slide.stat}
-            </div>
-            {slide.statLabel && (
-              <div className="text-[12px] text-white/50 leading-snug">
-                {slide.statLabel}
-              </div>
-            )}
+            <h2 className="sc-headline sc-headline--insight">{slide.headline}</h2>
+          </div>
+        ) : (
+          <h2 className={`sc-headline ${isHook ? 'sc-headline--hook' : ''} ${isOutcome ? 'sc-headline--outcome' : ''}`}>
+            {slide.headline}
+          </h2>
+        )}
+
+        {/* Outcome: big stat comes right after headline */}
+        {isOutcome && slide.stat && (
+          <div className="sc-stat sc-stat--hero" style={{ color }}>
+            <div className="sc-stat-value sc-stat-value--hero">{slide.stat}</div>
+            {slide.statLabel && <div className="sc-stat-label">{slide.statLabel}</div>}
+          </div>
+        )}
+
+        {/* Hook / Move: stat with left border */}
+        {!isOutcome && slide.stat && (
+          <div className="sc-stat" style={{ borderLeftColor: color }}>
+            <div className="sc-stat-value" style={{ color }}>{slide.stat}</div>
+            {slide.statLabel && <div className="sc-stat-label">{slide.statLabel}</div>}
           </div>
         )}
 
         {/* Body text */}
-        <p className="text-[0.95rem] leading-[1.65] text-white/75">
-          {slide.body}
-        </p>
+        <p className="sc-body">{slide.body}</p>
       </div>
 
-      {/* Tags on first slide */}
-      {isFirstSlide && (
-        <div className="flex flex-wrap gap-1.5 mt-5 flex-shrink-0">
-          {story.tags.map(tag => (
-            <span
-              key={tag}
-              className="text-[10px] px-2 py-0.5 rounded-full text-white/40"
-              style={{ background: 'rgba(255,255,255,0.07)' }}
-            >
-              {tag}
-            </span>
+      {/* ── Bottom bar ── */}
+      <div className="sc-bottom">
+        <div className="sc-dots">
+          {Array.from({ length: totalSlides }).map((_, i) => (
+            <div
+              key={i}
+              className="sc-dot"
+              style={{
+                background: i === slideIndex ? color : 'rgba(255,255,255,0.12)',
+                width: i === slideIndex ? '18px' : '5px',
+              }}
+            />
           ))}
         </div>
-      )}
 
-      {/* Insight special treatment */}
-      {slide.type === 'insight' && (
-        <div
-          className="absolute bottom-0 left-0 right-0 h-1"
-          style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
-        />
+        <div className="sc-bottom-right">
+          {isFirstSlide && story.tags.slice(0, 3).map(tag => (
+            <span key={tag} className="sc-tag">{tag}</span>
+          ))}
+          {isInsight && (
+            <button
+              className="sc-save"
+              style={{ color: isSaved ? color : 'rgba(255,255,255,0.35)', borderColor: isSaved ? colorBorder : 'rgba(255,255,255,0.1)' }}
+              onClick={onSave}
+            >
+              {isSaved
+                ? <><BookmarkCheck size={13} /> Saved</>
+                : <><Bookmark size={13} /> Save</>
+              }
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Insight: story-end accent line */}
+      {isInsight && (
+        <div className="sc-end-line" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
       )}
     </div>
   )
